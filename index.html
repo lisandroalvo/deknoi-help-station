@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+<title>DEK NOI — Help Station</title>
+<style>
+:root {
+  --dn-red:     #CC0000;
+  --dn-red-d:   #a30000;
+  --dn-yellow:  #FFEE00;
+  --dn-yellow-d:#e6d600;
+  --dn-brown:   #3D1A00;
+  --bg:         #1a0800;
+  --surface:    #2a0f00;
+  --card:       #321200;
+  --card-h:     #3e1600;
+  --border:     rgba(255,200,0,0.12);
+  --border-red: rgba(204,0,0,0.3);
+  --text:       #fff8ee;
+  --text-sub:   #c4a882;
+  --text-muted: #7a5a3a;
+  --radius:     20px;
+  --shadow:     0 4px 32px rgba(0,0,0,0.5);
+  --t:          0.25s cubic-bezier(0.4,0,0.2,1);
+  --font:       'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+.screen{background:var(--bg)}
+#screen-home,#screen-guide,#screen-support,#screen-pdf{background:var(--bg)}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.4,0,.2,1);transform:translateY(16px);will-change:opacity,transform}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.screen.exit{opacity:0;transform:translateY(-16px)}
+
+/* ── IDLE ── */
+#screen-idle{
+  background:radial-gradient(ellipse at 50% 20%, #4a1000 0%, #1a0500 55%, #0d0200 100%);
+  align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;animation:orbDrift 9s ease-in-out infinite alternate}
+.orb-1{width:500px;height:500px;background:#CC0000;top:-160px;left:-120px;animation-duration:10s}
+.orb-2{width:360px;height:360px;background:#7a3a00;bottom:-80px;right:-60px;animation-duration:13s;animation-delay:-5s}
+.orb-3{width:240px;height:240px;background:#FFEE00;top:38%;right:8%;opacity:.15;animation-duration:8s;animation-delay:-2s}
+@keyframes orbDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(28px,18px) scale(1.1)}}
+
+.idle-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0}
+
+/* character */
+.character-wrapper{width:260px;height:300px;position:relative;animation:charFloat 4s ease-in-out infinite}
+@keyframes charFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-16px) scale(1.025)}}
+.char-pulse{position:absolute;inset:-28px;border-radius:50%;border:2.5px solid rgba(255,238,0,.3);animation:pRing 3s ease-in-out infinite}
+.char-pulse:nth-child(2){animation-delay:1s;border-color:rgba(204,0,0,.25)}
+.char-pulse:nth-child(3){animation-delay:2s;border-color:rgba(255,238,0,.15)}
+@keyframes pRing{0%{transform:scale(.82);opacity:.9}100%{transform:scale(1.45);opacity:0}}
+#char-img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(204,0,0,.5))}
+#char-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:100px}
+
+/* idle logo */
+.idle-logo{margin-top:18px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(0,0,0,.6))}
+
+.idle-headline{margin-top:14px;font-size:clamp(32px,5.5vw,52px);font-weight:800;text-align:center;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#FFD700 50%,#ff6b00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.idle-sub{margin-top:10px;font-size:clamp(16px,2.2vw,22px);color:var(--text-sub);text-align:center}
+
+.tap-hint{margin-top:32px;display:flex;align-items:center;gap:12px;font-size:19px;font-weight:600;color:rgba(255,248,220,.75);animation:tapPulse 2s ease-in-out infinite}
+.tap-icon{width:50px;height:50px;border-radius:50%;background:rgba(255,238,0,.15);border:2px solid rgba(255,238,0,.5);display:flex;align-items:center;justify-content:center;font-size:22px}
+@keyframes tapPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
+
+/* LANG PICKER on idle */
+.lang-bar{position:absolute;top:20px;right:20px;z-index:10;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.lang-btn{padding:7px 14px;border-radius:100px;border:1.5px solid rgba(255,238,0,.3);background:rgba(0,0,0,.4);color:rgba(255,248,220,.85);font-size:14px;font-weight:600;cursor:pointer;transition:var(--t);backdrop-filter:blur(10px);display:flex;align-items:center;gap:7px;line-height:1}
+.lang-btn .flag{font-size:20px;line-height:1}
+.lang-btn .lcode{font-size:12px;letter-spacing:.5px;font-weight:700}
+.lang-btn:active,.lang-btn.active{background:var(--dn-yellow);color:#1a0800;border-color:var(--dn-yellow)}
+
+/* ── TOPBAR ── */
+.topbar{flex-shrink:0;height:70px;background:rgba(26,8,0,.92);backdrop-filter:blur(16px);border-bottom:2px solid var(--dn-red);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100;gap:12px}
+.topbar-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-logo-img{height:44px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+.topbar-logo-fallback{height:44px;width:44px;border-radius:12px;background:var(--dn-red);display:flex;align-items:center;justify-content:center;font-size:22px}
+.topbar-label{font-size:17px;font-weight:800;color:var(--text)}
+.topbar-label span{font-size:12px;font-weight:400;color:var(--text-sub);display:block;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+
+/* lang pill in topbar */
+.topbar-lang{display:flex;gap:5px}
+.tl-btn{padding:5px 10px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-sub);font-size:18px;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:4px;line-height:1}
+.tl-btn .lcode{font-size:11px;font-weight:700}
+.tl-btn.active,.tl-btn:active{background:var(--dn-yellow);color:#1a0800;border-color:var(--dn-yellow)}
+
+.btn-topbar{height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:var(--t)}
+.btn-topbar:active{transform:scale(.95);background:rgba(255,255,255,.1)}
+.btn-topbar.danger{border-color:rgba(204,0,0,.5);color:#fca5a5}
+
+/* ── SCROLL BODY ── */
+.scroll-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 28px;scrollbar-width:thin;scrollbar-color:rgba(255,200,0,.1) transparent;background:var(--bg)}
+.scroll-body::-webkit-scrollbar{width:5px}
+.scroll-body::-webkit-scrollbar-thumb{background:rgba(255,200,0,.15);border-radius:3px}
+
+/* ── HOME ── */
+#screen-home .scroll-body{display:flex;flex-direction:column;gap:18px}
+.home-greeting{text-align:center;padding:4px 0}
+.home-greeting h1{font-size:clamp(26px,4vw,38px);font-weight:800;background:linear-gradient(135deg,#fff,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.home-greeting p{font-size:17px;color:var(--text-sub);margin-top:5px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* cards */
+.menu-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 20px;cursor:pointer;display:flex;flex-direction:column;gap:12px;transition:var(--t);box-shadow:var(--shadow);position:relative;overflow:hidden;min-height:152px}
+.menu-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,200,0,.04) 0%,transparent 60%);border-radius:inherit}
+.menu-card:active{transform:scale(.97);background:var(--card-h)}
+.menu-card.ac-red   {border-color:rgba(204,0,0,.35)}
+.menu-card.ac-yellow{border-color:rgba(255,238,0,.3)}
+.menu-card.ac-orange{border-color:rgba(255,140,0,.3)}
+.menu-card.ac-white {border-color:rgba(255,255,255,.15)}
+.menu-card.ac-red    .card-icon{background:rgba(204,0,0,.18);color:#ff6b6b}
+.menu-card.ac-yellow .card-icon{background:rgba(255,238,0,.14);color:#FFE500}
+.menu-card.ac-orange .card-icon{background:rgba(255,140,0,.14);color:#ffaa44}
+.menu-card.ac-white  .card-icon{background:rgba(255,255,255,.08);color:#e0c080}
+.card-icon{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.card-body{flex:1}
+.card-label{font-size:19px;font-weight:700;line-height:1.2}
+.card-sub{font-size:13px;color:var(--text-sub);margin-top:3px;line-height:1.4}
+.card-arrow{align-self:flex-end;font-size:18px;color:var(--text-muted);margin-top:auto}
+.menu-card.full-width{flex-direction:row;align-items:center;min-height:96px;gap:18px}
+.menu-card.full-width .card-arrow{margin-top:0;margin-left:auto}
+
+.menu-card.help-now{background:linear-gradient(135deg,var(--dn-red),var(--dn-red-d));border-color:rgba(255,100,100,.4);box-shadow:0 4px 28px rgba(204,0,0,.4)}
+.menu-card.help-now .card-icon{background:rgba(255,255,255,.18);color:#fff;font-size:30px}
+.menu-card.help-now .card-label{color:#fff;font-size:21px}
+.menu-card.help-now .card-sub{color:rgba(255,255,255,.72)}
+.menu-card.help-now .card-arrow{color:rgba(255,255,255,.6)}
+
+/* ── GUIDE ── */
+#screen-guide .scroll-body{display:flex;flex-direction:column;gap:18px}
+.guide-header{display:flex;align-items:center;gap:14px;padding-bottom:2px}
+.guide-icon{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.guide-title{font-size:26px;font-weight:800}
+.guide-title span{font-size:15px;font-weight:400;color:var(--text-sub);display:block;margin-top:2px}
+.step-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;display:flex;gap:18px;align-items:flex-start;box-shadow:var(--shadow);animation:stepIn .3s ease both}
+@keyframes stepIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.step-number{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--dn-red),var(--dn-red-d));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;box-shadow:0 4px 14px rgba(204,0,0,.4)}
+.step-content{flex:1}
+.step-title{font-size:19px;font-weight:700}
+.step-desc{font-size:14px;color:var(--text-sub);margin-top:5px;line-height:1.5}
+.step-visual{width:72px;height:72px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
+.sub-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:var(--t);box-shadow:var(--shadow)}
+.sub-card:active{transform:scale(.97);background:var(--card-h)}
+.sub-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.sub-text{flex:1}
+.sub-title{font-size:17px;font-weight:700}
+.sub-desc{font-size:13px;color:var(--text-sub);margin-top:2px}
+.sub-arrow{color:var(--text-muted);font-size:17px}
+
+.tip-box{background:rgba(255,238,0,.07);border:1px solid rgba(255,238,0,.25);border-radius:13px;padding:15px 18px;display:flex;gap:11px;align-items:flex-start}
+.tip-box p{font-size:14px;color:#ffe066;line-height:1.5}
+.warn-box{background:rgba(204,0,0,.07);border:1px solid rgba(204,0,0,.25);border-radius:13px;padding:15px 18px;display:flex;gap:11px;align-items:flex-start}
+.warn-box p{font-size:14px;color:#ffaaaa;line-height:1.5}
+
+/* ── SUPPORT ── */
+#screen-support .scroll-body{display:flex;flex-direction:column;gap:18px}
+.support-hero{background:linear-gradient(135deg,#2a0800,#1a0500);border:1px solid var(--border-red);border-radius:var(--radius);padding:26px;text-align:center}
+.support-hero h2{font-size:24px;font-weight:800}
+.support-hero p{font-size:15px;color:var(--text-sub);margin-top:7px;line-height:1.5}
+.btn-action{width:100%;padding:22px 26px;border-radius:var(--radius);border:none;cursor:pointer;display:flex;align-items:center;gap:18px;font-family:var(--font);font-size:19px;font-weight:700;transition:var(--t);text-decoration:none}
+.btn-action:active{transform:scale(.97)}
+.btn-action .btn-icon{width:56px;height:56px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.btn-action .btn-text{flex:1;text-align:left}
+.btn-action .btn-text span{font-size:13px;font-weight:400;display:block;margin-top:2px}
+.btn-action .btn-arr{font-size:20px;opacity:.7}
+.btn-wa{background:linear-gradient(135deg,#128c7e,#075e54);color:#fff;box-shadow:0 4px 22px rgba(18,140,126,.35)}
+.btn-wa .btn-icon{background:rgba(255,255,255,.15)}
+.btn-call{background:linear-gradient(135deg,var(--dn-red),var(--dn-red-d));color:#fff;box-shadow:0 4px 22px rgba(204,0,0,.35)}
+.btn-call .btn-icon{background:rgba(255,255,255,.15)}
+.divider{display:flex;align-items:center;gap:11px;color:var(--text-muted);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.qr-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;gap:22px;align-items:center;box-shadow:var(--shadow)}
+.qr-box{width:136px;height:136px;border-radius:14px;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:8px}
+.qr-body h3{font-size:19px;font-weight:700}
+.qr-body p{font-size:13px;color:var(--text-sub);margin-top:7px;line-height:1.5}
+.qr-hint{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dn-yellow);margin-top:11px}
+
+/* ── PDF ── */
+#screen-pdf .scroll-body{display:flex;flex-direction:column;gap:18px}
+.btn-pdf{width:100%;padding:20px 26px;border-radius:var(--radius);border:none;background:linear-gradient(135deg,#7c2d12,#431407);color:#fff;font-family:var(--font);font-size:19px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 4px 22px rgba(120,40,10,.4);transition:var(--t)}
+.btn-pdf:active{transform:scale(.97)}
+
+/* ── BOTTOM BAR ── */
+.bottombar{flex-shrink:0;height:68px;background:rgba(26,8,0,.95);backdrop-filter:blur(16px);border-top:2px solid var(--dn-red);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100}
+.btn-bot{flex:1;height:46px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:var(--t)}
+.btn-bot:active{transform:scale(.96);background:rgba(255,255,255,.09)}
+.btn-bot.primary{background:var(--dn-red);border-color:transparent;box-shadow:0 0 14px rgba(204,0,0,.4)}
+.btn-bot.emerg{background:linear-gradient(135deg,#CC0000,#8b0000);border-color:transparent;box-shadow:0 0 14px rgba(204,0,0,.5)}
+
+/* ── INACTIVITY OVERLAY ── */
+#ia-overlay{position:fixed;inset:0;z-index:9999;background:rgba(10,2,0,.93);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .5s ease}
+#ia-overlay.visible{opacity:1;pointer-events:all}
+#ia-overlay h2{font-size:30px;font-weight:800;text-align:center}
+#ia-overlay p{font-size:17px;color:var(--text-sub);text-align:center}
+.cring{width:96px;height:96px;position:relative}
+.cring svg{transform:rotate(-90deg)}
+.cring circle{fill:none;stroke-width:8}
+.c-track{stroke:rgba(255,255,255,.1)}
+.c-fill{stroke:var(--dn-red);stroke-linecap:round;stroke-dasharray:282.7;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
+.cnum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800}
+.btn-stay{padding:14px 38px;border-radius:14px;background:var(--dn-yellow);color:#1a0800;border:none;font-family:var(--font);font-size:17px;font-weight:800;cursor:pointer;transition:var(--t);box-shadow:0 4px 18px rgba(255,238,0,.4)}
+.btn-stay:active{transform:scale(.96)}
+
+/* UTILITY */
+.section-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:2px 0}
+.badge{display:inline-flex;align-items:center;padding:3px 11px;border-radius:100px;font-size:11px;font-weight:600}
+.badge-red   {background:rgba(204,0,0,.18);color:#ff8888}
+.badge-yellow{background:rgba(255,238,0,.14);color:#ffe066}
+.badge-orange{background:rgba(255,140,0,.14);color:#ffaa55}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+.ripple-el{position:absolute;border-radius:50%;background:rgba(255,255,255,.18);width:56px;height:56px;transform:scale(0);opacity:1;animation:ripple .6s linear forwards;pointer-events:none}
+
+/* WA icon inline */
+.wa-svg{display:block}
+</style>
+</head>
+<body>
+
+<!-- INACTIVITY OVERLAY -->
+<div id="ia-overlay">
+  <div class="cring">
+    <svg viewBox="0 0 100 100" width="96" height="96">
+      <circle class="c-track" cx="50" cy="50" r="45"/>
+      <circle class="c-fill" cx="50" cy="50" r="45" id="c-circle"/>
+    </svg>
+    <div class="cnum" id="c-num">10</div>
+  </div>
+  <h2 id="ia-title">Still there?</h2>
+  <p id="ia-sub">Returning to home screen in a moment…</p>
+  <button class="btn-stay" id="btn-stay">I'm still here</button>
+</div>
+
+<!-- ══ IDLE SCREEN ══ -->
+<div class="screen active" id="screen-idle">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Language picker -->
+  <div class="lang-bar" id="idle-lang-bar">
+    <button class="lang-btn active" data-lang="en" onclick="setLang('en',event)"><span class="flag">🇬🇧</span><span class="lcode">EN</span></button>
+    <button class="lang-btn" data-lang="th" onclick="setLang('th',event)"><span class="flag">🇹🇭</span><span class="lcode">TH</span></button>
+    <button class="lang-btn" data-lang="zh" onclick="setLang('zh',event)"><span class="flag">🇨🇳</span><span class="lcode">ZH</span></button>
+    <button class="lang-btn" data-lang="fr" onclick="setLang('fr',event)"><span class="flag">🇫🇷</span><span class="lcode">FR</span></button>
+    <button class="lang-btn" data-lang="es" onclick="setLang('es',event)"><span class="flag">🇪🇸</span><span class="lcode">ES</span></button>
+  </div>
+
+  <div class="idle-content">
+    <div class="character-wrapper">
+      <div class="char-pulse"></div>
+      <div class="char-pulse"></div>
+      <div class="char-pulse"></div>
+      <!--
+        CHARACTER MEDIA
+        Option A (now):  <img src="...">
+        Option B (later): replace with <video autoplay loop muted playsinline id="char-img"></video>
+      -->
+      <img id="char-img" src="media/Logos from Google Drive.png" alt="DEK NOI character"
+           onerror="this.style.display='none';document.getElementById('char-fallback').style.display='flex'"/>
+      <div id="char-fallback">🛒</div>
+    </div>
+
+    <img class="idle-logo" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+         onerror="this.style.display='none'"/>
+
+    <div class="idle-headline" id="idle-headline">Need help?</div>
+    <div class="idle-sub" id="idle-sub">Your checkout guide is right here</div>
+    <div class="tap-hint">
+      <div class="tap-icon">👆</div>
+      <span id="idle-tap">Tap anywhere to get started</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOME SCREEN ══ -->
+<div class="screen" id="screen-home">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+           onerror="this.style.display='none';document.getElementById('tb-fallback').style.display='flex'"/>
+      <div class="topbar-logo-fallback" id="tb-fallback" style="display:none">🛒</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-lang" id="topbar-lang"></div>
+      <button class="btn-topbar danger" onclick="goIdle()" id="tb-exit">✕ Exit</button>
+    </div>
+  </div>
+
+  <div class="scroll-body">
+    <div class="home-greeting">
+      <h1 id="home-title">How can we help you? 👋</h1>
+      <p id="home-sub">Choose your topic — we'll guide you step by step.</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="menu-card ac-red" onclick="showGuide('scan')">
+        <div class="card-icon">🔍</div>
+        <div class="card-body">
+          <div class="card-label" data-i18n="scan_title">How to scan products</div>
+          <div class="card-sub" data-i18n="scan_sub">Scan items quickly and correctly</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="menu-card ac-yellow" onclick="showGuide('pay')">
+        <div class="card-icon">💳</div>
+        <div class="card-body">
+          <div class="card-label" data-i18n="pay_title">How to pay</div>
+          <div class="card-sub" data-i18n="pay_sub">Payment methods and process</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="menu-card full-width ac-orange" onclick="showGuide('product')">
+      <div class="card-icon">⚠️</div>
+      <div class="card-body">
+        <div class="card-label" data-i18n="prob_title">Problem with a product</div>
+        <div class="card-sub" data-i18n="prob_sub">Barcode, wrong price, item not found</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="menu-card full-width help-now" onclick="showScreen('screen-support')">
+      <div class="card-icon">🆘</div>
+      <div class="card-body">
+        <div class="card-label" data-i18n="helpnow_title">Need help NOW</div>
+        <div class="card-sub" data-i18n="helpnow_sub">Contact support — WhatsApp or call</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="menu-card full-width ac-white" onclick="showScreen('screen-pdf')">
+      <div class="card-icon" style="background:rgba(255,255,255,.07);color:#d4a855">📄</div>
+      <div class="card-body">
+        <div class="card-label" data-i18n="pdf_title">Full help guide (PDF)</div>
+        <div class="card-sub" data-i18n="pdf_sub">Open the complete checkout guide</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <button class="btn-bot" onclick="goIdle()" id="bb-home">🏠 <span data-i18n="btn_home">Home</span></button>
+    <button class="btn-bot emerg" onclick="showScreen('screen-support')">🆘 <span data-i18n="btn_helpnow">Help Now</span></button>
+  </div>
+</div>
+
+<!-- ══ GUIDE SCREEN (dynamic) ══ -->
+<div class="screen" id="screen-guide">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+           onerror="this.style.display='none'"/>
+      <div class="topbar-label">
+        <span id="guide-breadcrumb">Guide</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-topbar" onclick="showScreen('screen-home')" id="tb-back">‹ <span data-i18n="btn_back">Back</span></button>
+      <button class="btn-topbar danger" onclick="showScreen('screen-support')">🆘</button>
+    </div>
+  </div>
+  <div class="scroll-body" id="guide-body"></div>
+  <div class="bottombar">
+    <button class="btn-bot" onclick="showScreen('screen-home')">‹ <span data-i18n="btn_home">Home</span></button>
+    <button class="btn-bot primary" onclick="showScreen('screen-support')" id="bb-contact"><span data-i18n="btn_contact">Contact Support</span></button>
+    <button class="btn-bot emerg" onclick="showScreen('screen-support')">🆘 <span data-i18n="btn_helpnow">Help Now</span></button>
+  </div>
+</div>
+
+<!-- ══ SUPPORT SCREEN ══ -->
+<div class="screen" id="screen-support">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+           onerror="this.style.display='none'"/>
+      <div class="topbar-label">
+        <span data-i18n="support_label">Get Help</span>
+        <span data-i18n="support_label_sub">Contact Support</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-topbar" onclick="showScreen('screen-home')">‹ <span data-i18n="btn_back">Back</span></button>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="support-hero">
+      <h2 data-i18n="support_hero_title">We're here to help 🙌</h2>
+      <p data-i18n="support_hero_sub">No staff on-site right now — reach us instantly via WhatsApp or phone call.</p>
+    </div>
+    <div class="section-title" data-i18n="fastest_options">Fastest options</div>
+    <a id="wa-btn" class="btn-action btn-wa" href="#" target="_blank" rel="noopener" onclick="trackAction('whatsapp')">
+      <div class="btn-icon">
+        <svg class="wa-svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12.004 2C6.477 2 2 6.477 2 12.004a9.963 9.963 0 001.367 5.086L2 22l5.052-1.345A9.96 9.96 0 0012.004 22C17.527 22 22 17.527 22 12.004 22 6.477 17.527 2 12.004 2zm0 18.15a8.282 8.282 0 01-4.224-1.154l-.303-.18-3.134.834.843-3.064-.196-.315A8.316 8.316 0 013.85 12.003c0-4.497 3.658-8.154 8.154-8.154 4.497 0 8.154 3.657 8.154 8.154 0 4.497-3.657 8.147-8.154 8.147z"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <span data-i18n="wa_btn">Message on WhatsApp</span>
+        <span data-i18n="wa_btn_sub">Opens pre-filled message — instant response</span>
+      </div>
+      <div class="btn-arr">›</div>
+    </a>
+    <a id="call-btn" class="btn-action btn-call" href="tel:YOUR_PHONE" onclick="trackAction('call')">
+      <div class="btn-icon">📞</div>
+      <div class="btn-text">
+        <span data-i18n="call_btn">Call us directly</span>
+        <span data-i18n="call_btn_sub">Tap to call — we'll answer right away</span>
+      </div>
+      <div class="btn-arr">›</div>
+    </a>
+    <div class="divider" data-i18n="or_scan">or scan with your own phone</div>
+    <div class="qr-card">
+      <div class="qr-box">
+        <!--
+          Replace canvas with: <img src="qr-support.png" style="width:100%;height:100%;object-fit:contain">
+        -->
+        <canvas id="qr-canvas" width="120" height="120"></canvas>
+      </div>
+      <div class="qr-body">
+        <h3 data-i18n="qr_title">Scan to contact us</h3>
+        <p data-i18n="qr_sub">Use your phone camera to open WhatsApp directly on your device.</p>
+        <div class="qr-hint" data-i18n="qr_hint">📷 Point your phone camera at the code</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div style="font-size:18px;margin-top:2px">💡</div>
+      <p data-i18n="support_tip">You can leave the machine as-is. We'll see your request and assist remotely or send someone over.</p>
+    </div>
+  </div>
+  <div class="bottombar">
+    <button class="btn-bot" onclick="showScreen('screen-home')">‹ <span data-i18n="btn_home">Home</span></button>
+    <button class="btn-bot primary" onclick="showScreen('screen-home')" data-i18n="btn_done">Done — Back to menu</button>
+  </div>
+</div>
+
+<!-- ══ PDF SCREEN ══ -->
+<div class="screen" id="screen-pdf">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+           onerror="this.style.display='none'"/>
+      <div class="topbar-label">
+        <span data-i18n="pdf_label">Full Guide</span>
+        <span data-i18n="pdf_label_sub">PDF Manual</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-topbar" onclick="showScreen('screen-home')">‹ <span data-i18n="btn_back">Back</span></button>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="warn-box">
+      <div style="font-size:18px;margin-top:2px">📌</div>
+      <p data-i18n="pdf_note">The PDF is a full reference. For quick help, use the home menu — it's faster.</p>
+    </div>
+    <button class="btn-pdf" onclick="openPDF()">
+      <span style="font-size:26px">📄</span>
+      <div style="text-align:left">
+        <span data-i18n="pdf_open">Open Full Help Guide</span>
+        <span style="font-size:13px;font-weight:400;display:block;margin-top:2px;opacity:.7" data-i18n="pdf_open_sub">Opens in new tab</span>
+      </div>
+      <span style="margin-left:auto;font-size:20px;opacity:.7">›</span>
+    </button>
+    <div class="section-title" data-i18n="guide_covers">Guide covers</div>
+    <div class="grid-2">
+      <div class="step-card"><div class="step-visual">🔍</div><div class="step-content"><div class="step-title" data-i18n="pdf_c1">Scanning</div><div class="step-desc" data-i18n="pdf_c1s">All barcode types</div></div></div>
+      <div class="step-card"><div class="step-visual">💳</div><div class="step-content"><div class="step-title" data-i18n="pdf_c2">Payments</div><div class="step-desc" data-i18n="pdf_c2s">Card, cash, QR</div></div></div>
+      <div class="step-card"><div class="step-visual">⚠️</div><div class="step-content"><div class="step-title" data-i18n="pdf_c3">Problems</div><div class="step-desc" data-i18n="pdf_c3s">Errors & resolutions</div></div></div>
+      <div class="step-card"><div class="step-visual">📞</div><div class="step-content"><div class="step-title" data-i18n="pdf_c4">Support</div><div class="step-desc" data-i18n="pdf_c4s">Contact & hours</div></div></div>
+    </div>
+    <div class="tip-box">
+      <div style="font-size:18px;margin-top:2px">💡</div>
+      <p data-i18n="pdf_tip">Need something fast? Go back — most issues solved in 2 taps.</p>
+    </div>
+  </div>
+  <div class="bottombar">
+    <button class="btn-bot" onclick="showScreen('screen-home')">‹ <span data-i18n="btn_home">Home</span></button>
+    <button class="btn-bot emerg" onclick="showScreen('screen-support')">🆘 <span data-i18n="btn_helpnow">Help Now</span></button>
+  </div>
+</div>
+
+<script>
+/* ── CONFIG ── */
+const CONFIG = {
+  whatsappNumber:  "YOUR_WHATSAPP_NUMBER",
+  phoneNumber:     "tel:+YOUR_PHONE",
+  pdfUrl:          "guide.pdf",
+  whatsappMessage: "Hi, I need help at the DEK NOI self-checkout station. 🛒",
+  idleTimeout:     60,
+  warningCountdown:10,
+};
+
+/* ── TRANSLATIONS ── */
+const T = {
+  en: {
+    idle_headline:"Need help?", idle_sub:"Your checkout guide is right here", idle_tap:"Tap anywhere to get started",
+    home_title:"How can we help you? 👋", home_sub:"Choose your topic — we'll guide you step by step.",
+    scan_title:"How to scan products", scan_sub:"Scan items quickly and correctly",
+    pay_title:"How to pay", pay_sub:"Payment methods and process",
+    prob_title:"Problem with a product", prob_sub:"Barcode, wrong price, item not found",
+    helpnow_title:"Need help NOW", helpnow_sub:"Contact support — WhatsApp or call",
+    pdf_title:"Full help guide (PDF)", pdf_sub:"Open the complete checkout guide",
+    btn_home:"Home", btn_helpnow:"Help Now", btn_back:"Back", btn_contact:"Contact Support", btn_done:"Done — Back to menu",
+    support_label:"Get Help", support_label_sub:"Contact Support",
+    support_hero_title:"We're here to help 🙌", support_hero_sub:"No staff on-site right now — reach us via WhatsApp or call.",
+    fastest_options:"Fastest options",
+    wa_btn:"Message on WhatsApp", wa_btn_sub:"Opens pre-filled message — instant response",
+    call_btn:"Call us directly", call_btn_sub:"Tap to call — we'll answer right away",
+    or_scan:"or scan with your own phone",
+    qr_title:"Scan to contact us", qr_sub:"Use your phone camera to open WhatsApp on your device.", qr_hint:"📷 Point your camera at the code",
+    support_tip:"You can leave the machine as-is. We'll assist remotely or send someone over.",
+    pdf_label:"Full Guide", pdf_label_sub:"PDF Manual",
+    pdf_note:"The PDF is a full reference. For quick help, use the home menu.",
+    pdf_open:"Open Full Help Guide", pdf_open_sub:"Opens in new tab",
+    guide_covers:"Guide covers",
+    pdf_c1:"Scanning", pdf_c1s:"All barcode types", pdf_c2:"Payments", pdf_c2s:"Card, cash, QR",
+    pdf_c3:"Problems", pdf_c3s:"Errors & resolutions", pdf_c4:"Support", pdf_c4s:"Contact & hours",
+    pdf_tip:"Need something fast? Most issues solved in 2 taps.",
+    ia_title:"Still there?", ia_sub:"Returning to home screen in a moment…", ia_stay:"I'm still here",
+    // guides
+    g_scan_title:"How to scan products", g_scan_sub:"Follow these steps carefully", g_scan_badge:"Quick Guide",
+    g_pay_title:"How to pay", g_pay_sub:"Complete your purchase", g_pay_badge:"Payment Guide",
+    g_prod_title:"Problem with a product", g_prod_sub:"Choose what's happening", g_prod_badge:"Product Issues",
+    g_bar_title:"Barcode not working", g_bar_sub:"Try these steps first", g_bar_badge:"Quick Fix",
+    g_price_title:"Wrong price shown", g_price_sub:"Here's what to do", g_price_badge:"Price Issue",
+    g_nf_title:"Item not found in system", g_nf_sub:"We'll sort this out", g_nf_badge:"System Issue",
+  },
+  th: {
+    idle_headline:"ต้องการความช่วยเหลือ?", idle_sub:"คู่มือชำระเงินอยู่ที่นี่", idle_tap:"แตะที่ใดก็ได้เพื่อเริ่มต้น",
+    home_title:"เราช่วยอะไรคุณได้บ้าง? 👋", home_sub:"เลือกหัวข้อ — เราจะแนะนำทีละขั้นตอน",
+    scan_title:"วิธีสแกนสินค้า", scan_sub:"สแกนสินค้าได้อย่างรวดเร็วและถูกต้อง",
+    pay_title:"วิธีชำระเงิน", pay_sub:"วิธีการชำระเงินและขั้นตอน",
+    prob_title:"ปัญหาเกี่ยวกับสินค้า", prob_sub:"บาร์โค้ด ราคาผิด หรือหาสินค้าไม่เจอ",
+    helpnow_title:"ต้องการความช่วยเหลือเดี๋ยวนี้", helpnow_sub:"ติดต่อทีมงาน — WhatsApp หรือโทรศัพท์",
+    pdf_title:"คู่มือฉบับเต็ม (PDF)", pdf_sub:"เปิดคู่มือการชำระเงินฉบับสมบูรณ์",
+    btn_home:"หน้าหลัก", btn_helpnow:"ขอความช่วยเหลือ", btn_back:"ย้อนกลับ", btn_contact:"ติดต่อทีมงาน", btn_done:"เสร็จสิ้น — กลับเมนู",
+    support_label:"รับความช่วยเหลือ", support_label_sub:"ติดต่อทีมสนับสนุน",
+    support_hero_title:"เราพร้อมช่วยเหลือคุณ 🙌", support_hero_sub:"ไม่มีพนักงานอยู่ขณะนี้ — ติดต่อเราผ่าน WhatsApp หรือโทรศัพท์",
+    fastest_options:"ตัวเลือกที่เร็วที่สุด",
+    wa_btn:"ส่งข้อความ WhatsApp", wa_btn_sub:"เปิดข้อความที่กรอกไว้ล่วงหน้า",
+    call_btn:"โทรหาเราโดยตรง", call_btn_sub:"แตะเพื่อโทร — เราจะรับสาย",
+    or_scan:"หรือสแกนด้วยโทรศัพท์ของคุณ",
+    qr_title:"สแกนเพื่อติดต่อเรา", qr_sub:"ใช้กล้องโทรศัพท์สแกนโค้ดนี้", qr_hint:"📷 ชี้กล้องไปที่โค้ด",
+    support_tip:"คุณสามารถทิ้งเครื่องไว้ได้ เราจะช่วยเหลือจากระยะไกล",
+    pdf_label:"คู่มือฉบับเต็ม", pdf_label_sub:"คู่มือ PDF",
+    pdf_note:"PDF คือคู่มืออ้างอิง สำหรับความช่วยเหลือด่วน ใช้เมนูหน้าหลักจะเร็วกว่า",
+    pdf_open:"เปิดคู่มือช่วยเหลือฉบับเต็ม", pdf_open_sub:"เปิดในแท็บใหม่",
+    guide_covers:"คู่มือครอบคลุม",
+    pdf_c1:"การสแกน", pdf_c1s:"บาร์โค้ดทุกประเภท", pdf_c2:"การชำระเงิน", pdf_c2s:"บัตร เงินสด QR",
+    pdf_c3:"ปัญหา", pdf_c3s:"ข้อผิดพลาดและวิธีแก้", pdf_c4:"การสนับสนุน", pdf_c4s:"ติดต่อและเวลาทำการ",
+    pdf_tip:"ต้องการความช่วยเหลือด่วน? กลับไปที่เมนูหลัก",
+    ia_title:"ยังอยู่ที่นี่ไหม?", ia_sub:"กำลังกลับสู่หน้าหลักในอีกสักครู่…", ia_stay:"ฉันยังอยู่ที่นี่",
+    g_scan_title:"วิธีสแกนสินค้า", g_scan_sub:"ทำตามขั้นตอนเหล่านี้อย่างระมัดระวัง", g_scan_badge:"คู่มือด่วน",
+    g_pay_title:"วิธีชำระเงิน", g_pay_sub:"ดำเนินการซื้อให้เสร็จสมบูรณ์", g_pay_badge:"คู่มือการชำระเงิน",
+    g_prod_title:"ปัญหาเกี่ยวกับสินค้า", g_prod_sub:"เลือกสิ่งที่เกิดขึ้น", g_prod_badge:"ปัญหาสินค้า",
+    g_bar_title:"บาร์โค้ดใช้งานไม่ได้", g_bar_sub:"ลองทำตามขั้นตอนเหล่านี้ก่อน", g_bar_badge:"แก้ไขด่วน",
+    g_price_title:"ราคาที่แสดงไม่ถูกต้อง", g_price_sub:"นี่คือสิ่งที่ต้องทำ", g_price_badge:"ปัญหาราคา",
+    g_nf_title:"ไม่พบสินค้าในระบบ", g_nf_sub:"เราจะจัดการให้", g_nf_badge:"ปัญหาระบบ",
+  },
+  zh: {
+    idle_headline:"需要帮助吗？", idle_sub:"结账指南就在这里", idle_tap:"点击任意处开始",
+    home_title:"我们能帮您什么？👋", home_sub:"选择您的问题 — 我们将逐步引导您",
+    scan_title:"如何扫描商品", scan_sub:"快速正确地扫描商品",
+    pay_title:"如何付款", pay_sub:"付款方式和流程",
+    prob_title:"商品问题", prob_sub:"条形码、价格错误、找不到商品",
+    helpnow_title:"立即需要帮助", helpnow_sub:"联系客服 — WhatsApp 或电话",
+    pdf_title:"完整帮助指南 (PDF)", pdf_sub:"打开完整的结账指南",
+    btn_home:"主页", btn_helpnow:"立即求助", btn_back:"返回", btn_contact:"联系客服", btn_done:"完成 — 返回菜单",
+    support_label:"获取帮助", support_label_sub:"联系客服",
+    support_hero_title:"我们随时为您服务 🙌", support_hero_sub:"现在没有工作人员在场 — 请通过 WhatsApp 或电话联系我们",
+    fastest_options:"最快方式",
+    wa_btn:"发送 WhatsApp 消息", wa_btn_sub:"打开预填消息 — 即时回复",
+    call_btn:"直接致电", call_btn_sub:"点击呼叫 — 我们会立即接听",
+    or_scan:"或用您的手机扫描",
+    qr_title:"扫描联系我们", qr_sub:"用手机摄像头扫描此码", qr_hint:"📷 将摄像头对准二维码",
+    support_tip:"您可以将机器保持原样，我们将远程协助或派人前往。",
+    pdf_label:"完整指南", pdf_label_sub:"PDF 手册",
+    pdf_note:"PDF 是完整参考指南。如需快速帮助，请使用主菜单。",
+    pdf_open:"打开完整帮助指南", pdf_open_sub:"在新标签页中打开",
+    guide_covers:"指南涵盖",
+    pdf_c1:"扫描", pdf_c1s:"所有条形码类型", pdf_c2:"付款", pdf_c2s:"卡、现金、二维码",
+    pdf_c3:"问题", pdf_c3s:"错误及解决方案", pdf_c4:"支持", pdf_c4s:"联系方式和营业时间",
+    pdf_tip:"需要快速帮助？大多数问题只需 2 次点击即可解决。",
+    ia_title:"您还在吗？", ia_sub:"即将返回主屏幕…", ia_stay:"我还在",
+    g_scan_title:"如何扫描商品", g_scan_sub:"请仔细按照步骤操作", g_scan_badge:"快速指南",
+    g_pay_title:"如何付款", g_pay_sub:"完成您的购买", g_pay_badge:"付款指南",
+    g_prod_title:"商品问题", g_prod_sub:"选择遇到的情况", g_prod_badge:"商品问题",
+    g_bar_title:"条形码无法使用", g_bar_sub:"请先尝试以下步骤", g_bar_badge:"快速修复",
+    g_price_title:"显示价格有误", g_price_sub:"请按以下操作", g_price_badge:"价格问题",
+    g_nf_title:"系统中找不到商品", g_nf_sub:"我们会为您解决", g_nf_badge:"系统问题",
+  },
+  fr: {
+    idle_headline:"Besoin d'aide ?", idle_sub:"Votre guide de caisse est ici", idle_tap:"Appuyez n'importe où pour commencer",
+    home_title:"Comment pouvons-nous vous aider ? 👋", home_sub:"Choisissez votre sujet — nous vous guidons étape par étape.",
+    scan_title:"Comment scanner les produits", scan_sub:"Scannez les articles rapidement",
+    pay_title:"Comment payer", pay_sub:"Méthodes de paiement et processus",
+    prob_title:"Problème avec un produit", prob_sub:"Code-barres, mauvais prix, article introuvable",
+    helpnow_title:"Besoin d'aide MAINTENANT", helpnow_sub:"Contacter le support — WhatsApp ou appel",
+    pdf_title:"Guide complet (PDF)", pdf_sub:"Ouvrir le guide de caisse complet",
+    btn_home:"Accueil", btn_helpnow:"Aide urgente", btn_back:"Retour", btn_contact:"Contacter le support", btn_done:"Terminer — Retour au menu",
+    support_label:"Obtenir de l'aide", support_label_sub:"Contacter le support",
+    support_hero_title:"Nous sommes là pour vous aider 🙌", support_hero_sub:"Pas de personnel sur place — contactez-nous via WhatsApp ou téléphone.",
+    fastest_options:"Options les plus rapides",
+    wa_btn:"Message WhatsApp", wa_btn_sub:"Ouvre un message pré-rempli — réponse instantanée",
+    call_btn:"Nous appeler directement", call_btn_sub:"Appuyez pour appeler — nous répondrons",
+    or_scan:"ou scannez avec votre téléphone",
+    qr_title:"Scanner pour nous contacter", qr_sub:"Utilisez l'appareil photo pour ouvrir WhatsApp.", qr_hint:"📷 Pointez votre caméra sur le code",
+    support_tip:"Vous pouvez laisser la machine telle quelle. Nous vous aiderons à distance.",
+    pdf_label:"Guide complet", pdf_label_sub:"Manuel PDF",
+    pdf_note:"Le PDF est un guide de référence. Pour une aide rapide, utilisez le menu principal.",
+    pdf_open:"Ouvrir le guide complet", pdf_open_sub:"S'ouvre dans un nouvel onglet",
+    guide_covers:"Le guide couvre",
+    pdf_c1:"Scan", pdf_c1s:"Tous les types de codes-barres", pdf_c2:"Paiements", pdf_c2s:"Carte, espèces, QR",
+    pdf_c3:"Problèmes", pdf_c3s:"Erreurs et résolutions", pdf_c4:"Support", pdf_c4s:"Contact et horaires",
+    pdf_tip:"Besoin de quelque chose rapidement ? Retournez au menu — 2 appuis suffisent.",
+    ia_title:"Êtes-vous encore là ?", ia_sub:"Retour à l'écran d'accueil dans un instant…", ia_stay:"Je suis encore là",
+    g_scan_title:"Comment scanner les produits", g_scan_sub:"Suivez ces étapes attentivement", g_scan_badge:"Guide rapide",
+    g_pay_title:"Comment payer", g_pay_sub:"Finalisez votre achat", g_pay_badge:"Guide de paiement",
+    g_prod_title:"Problème avec un produit", g_prod_sub:"Choisissez ce qui se passe", g_prod_badge:"Problèmes produit",
+    g_bar_title:"Code-barres non reconnu", g_bar_sub:"Essayez d'abord ces étapes", g_bar_badge:"Solution rapide",
+    g_price_title:"Prix affiché incorrect", g_price_sub:"Voici ce qu'il faut faire", g_price_badge:"Problème de prix",
+    g_nf_title:"Article introuvable dans le système", g_nf_sub:"Nous allons régler ça", g_nf_badge:"Problème système",
+  },
+  es: {
+    idle_headline:"¿Necesita ayuda?", idle_sub:"Su guía de caja está aquí", idle_tap:"Toque en cualquier lugar para comenzar",
+    home_title:"¿Cómo podemos ayudarle? 👋", home_sub:"Elija su tema — le guiaremos paso a paso.",
+    scan_title:"Cómo escanear productos", scan_sub:"Escanee artículos rápida y correctamente",
+    pay_title:"Cómo pagar", pay_sub:"Métodos de pago y proceso",
+    prob_title:"Problema con un producto", prob_sub:"Código de barras, precio incorrecto, artículo no encontrado",
+    helpnow_title:"Necesito ayuda AHORA", helpnow_sub:"Contactar soporte — WhatsApp o llamada",
+    pdf_title:"Guía completa (PDF)", pdf_sub:"Abrir la guía completa de caja",
+    btn_home:"Inicio", btn_helpnow:"Ayuda urgente", btn_back:"Volver", btn_contact:"Contactar soporte", btn_done:"Listo — Volver al menú",
+    support_label:"Obtener ayuda", support_label_sub:"Contactar soporte",
+    support_hero_title:"Estamos aquí para ayudar 🙌", support_hero_sub:"No hay personal en el lugar — contáctenos por WhatsApp o teléfono.",
+    fastest_options:"Opciones más rápidas",
+    wa_btn:"Mensaje por WhatsApp", wa_btn_sub:"Abre mensaje prellenado — respuesta inmediata",
+    call_btn:"Llamarnos directamente", call_btn_sub:"Toque para llamar — responderemos",
+    or_scan:"o escanee con su teléfono",
+    qr_title:"Escanear para contactarnos", qr_sub:"Use la cámara de su teléfono para abrir WhatsApp.", qr_hint:"📷 Apunte su cámara al código",
+    support_tip:"Puede dejar la máquina como está. Le ayudaremos de forma remota.",
+    pdf_label:"Guía completa", pdf_label_sub:"Manual PDF",
+    pdf_note:"El PDF es una guía de referencia. Para ayuda rápida, use el menú principal.",
+    pdf_open:"Abrir guía de ayuda completa", pdf_open_sub:"Se abre en nueva pestaña",
+    guide_covers:"La guía incluye",
+    pdf_c1:"Escaneo", pdf_c1s:"Todos los tipos de código", pdf_c2:"Pagos", pdf_c2s:"Tarjeta, efectivo, QR",
+    pdf_c3:"Problemas", pdf_c3s:"Errores y soluciones", pdf_c4:"Soporte", pdf_c4s:"Contacto y horarios",
+    pdf_tip:"¿Necesita algo rápido? La mayoría de problemas se resuelven en 2 toques.",
+    ia_title:"¿Sigue ahí?", ia_sub:"Volviendo a la pantalla de inicio…", ia_stay:"Sigo aquí",
+    g_scan_title:"Cómo escanear productos", g_scan_sub:"Siga estos pasos cuidadosamente", g_scan_badge:"Guía rápida",
+    g_pay_title:"Cómo pagar", g_pay_sub:"Complete su compra", g_pay_badge:"Guía de pago",
+    g_prod_title:"Problema con un producto", g_prod_sub:"Elija qué está pasando", g_prod_badge:"Problemas de producto",
+    g_bar_title:"Código de barras no funciona", g_bar_sub:"Pruebe estos pasos primero", g_bar_badge:"Solución rápida",
+    g_price_title:"Precio incorrecto mostrado", g_price_sub:"Esto es lo que debe hacer", g_price_badge:"Problema de precio",
+    g_nf_title:"Artículo no encontrado en sistema", g_nf_sub:"Lo resolveremos", g_nf_badge:"Problema de sistema",
+  }
+};
+
+/* ── LANGUAGE ENGINE ── */
+let lang = 'en';
+
+function t(key){ return (T[lang] && T[lang][key]) || T.en[key] || key; }
+
+function setLang(l, e){
+  lang = l;
+  // sync idle bar
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === l);
+  });
+  // sync topbar (rebuilt below)
+  buildTopbarLang();
+  applyTranslations();
+  if(e) { e.stopPropagation(); }
+}
+
+function applyTranslations(){
+  // static i18n nodes
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    el.textContent = t(k);
+  });
+  // idle specific
+  document.getElementById('idle-headline').textContent = t('idle_headline');
+  document.getElementById('idle-sub').textContent = t('idle_sub');
+  document.getElementById('idle-tap').textContent = t('idle_tap');
+  document.getElementById('home-title').textContent = t('home_title');
+  document.getElementById('home-sub').textContent = t('home_sub');
+  // inactivity overlay
+  document.getElementById('ia-title').textContent = t('ia_title');
+  document.getElementById('ia-sub').textContent = t('ia_sub');
+  document.getElementById('btn-stay').textContent = t('ia_stay');
+  // re-render guide if open
+  if(currentScreen === 'screen-guide' && currentGuideKey){
+    renderGuide(currentGuideKey);
+  }
+}
+
+const LANGS = [
+  {k:'en', flag:'🇬🇧', code:'EN'},
+  {k:'th', flag:'🇹🇭', code:'TH'},
+  {k:'zh', flag:'🇨🇳', code:'ZH'},
+  {k:'fr', flag:'🇫🇷', code:'FR'},
+  {k:'es', flag:'🇪🇸', code:'ES'},
+];
+
+function buildTopbarLang(){
+  const bar = document.getElementById('topbar-lang');
+  bar.innerHTML = LANGS.map(x =>
+    `<button class="tl-btn${x.k===lang?' active':''}" data-lang="${x.k}" onclick="setLang('${x.k}',event)">
+      <span>${x.flag}</span><span class="lcode">${x.code}</span>
+    </button>`
+  ).join('');
+}
+
+/* ── GUIDE DATA (language-aware) ── */
+function getGuides(){
+  return {
+    scan:{
+      icon:"🔍", iconBg:"rgba(204,0,0,.18)", iconColor:"#ff6b6b",
+      titleKey:"g_scan_title", subKey:"g_scan_sub", badgeKey:"g_scan_badge", badgeCls:"badge-red",
+      steps:[
+        {n:1,title:({en:"Place item on scanner",th:"วางสินค้าบนสแกนเนอร์",zh:"将商品放在扫描仪上",fr:"Placez l'article sur le scanner",es:"Coloque el artículo en el escáner"}),
+              desc:({en:"Hold the barcode facing the glass surface. Keep it flat and steady.",th:"หันบาร์โค้ดลงบนกระจกสแกนเนอร์ วางให้แบนและนิ่ง",zh:"将条形码朝向玻璃扫描面，保持平稳。",fr:"Tenez le code-barres face à la surface en verre. Maintenez-le plat.",es:"Sostenga el código de barras frente al vidrio. Manténgalo plano."}),
+              visual:"📦"},
+        {n:2,title:({en:"Wait for the beep",th:"รอเสียงบี๊บ",zh:"等待提示音",fr:"Attendez le bip",es:"Espere el pitido"}),
+              desc:({en:"You'll hear a beep and see the item on screen. The green light confirms scanning.",th:"คุณจะได้ยินเสียงบี๊บและเห็นสินค้าบนหน้าจอ ไฟเขียวยืนยันการสแกน",zh:"您会听到提示音并在屏幕上看到该商品，绿灯确认扫描成功。",fr:"Vous entendrez un bip et verrez l'article à l'écran.",es:"Escuchará un pitido y verá el artículo en pantalla."}),
+              visual:"🔔"},
+        {n:3,title:({en:"Move item to bagging area",th:"ย้ายสินค้าไปที่พื้นที่ถุง",zh:"将商品移至装袋区",fr:"Déplacez l'article vers la zone d'emballage",es:"Mueva el artículo al área de bolsas"}),
+              desc:({en:"Place the scanned item in the bagging area on your right.",th:"วางสินค้าที่สแกนแล้วในพื้นที่ถุงทางขวาของคุณ",zh:"将扫描的商品放在右侧的装袋区。",fr:"Placez l'article scanné dans la zone d'emballage à votre droite.",es:"Coloque el artículo escaneado en el área de bolsas a su derecha."}),
+              visual:"🛍️"},
+        {n:4,title:({en:"Repeat for each item",th:"ทำซ้ำสำหรับแต่ละสินค้า",zh:"对每件商品重复操作",fr:"Répétez pour chaque article",es:"Repita para cada artículo"}),
+              desc:({en:"Scan one item at a time. Wait for confirmation before the next.",th:"สแกนทีละสินค้า รอการยืนยันก่อนสินค้าถัดไป",zh:"一次扫描一件商品，等待确认后再扫描下一件。",fr:"Scannez un article à la fois. Attendez la confirmation avant le suivant.",es:"Escanee un artículo a la vez. Espere confirmación antes del siguiente."}),
+              visual:"🔄"},
+      ],
+      tip:({en:"If the scanner doesn't beep after 3 tries, tap 'Problem with a product' for help.",th:"ถ้าสแกนเนอร์ไม่ส่งเสียงบี๊บหลังลอง 3 ครั้ง กด 'ปัญหาเกี่ยวกับสินค้า'",zh:"如果扫描3次没有响，请点击"商品问题"获取帮助。",fr:"Si le scanner ne bipe pas après 3 essais, appuyez sur 'Problème avec un produit'.",es:"Si el escáner no pita tras 3 intentos, toque 'Problema con un producto'."})
+    },
+    pay:{
+      icon:"💳", iconBg:"rgba(255,238,0,.14)", iconColor:"#FFE500",
+      titleKey:"g_pay_title", subKey:"g_pay_sub", badgeKey:"g_pay_badge", badgeCls:"badge-yellow",
+      steps:[
+        {n:1,title:({en:"Review your cart",th:"ตรวจสอบตะกร้าสินค้า",zh:"查看您的购物车",fr:"Vérifiez votre panier",es:"Revise su carrito"}),
+              desc:({en:"Check all scanned items on screen. Nothing missing or duplicated.",th:"ตรวจสอบสินค้าที่สแกนบนหน้าจอ ไม่มีสินค้าหาย หรือซ้ำ",zh:"检查屏幕上所有已扫描商品，确保无遗漏或重复。",fr:"Vérifiez tous les articles scannés à l'écran.",es:"Verifique todos los artículos escaneados en pantalla."}),
+              visual:"🧾"},
+        {n:2,title:({en:"Tap 'Pay Now'",th:"กด 'ชำระเงินเดี๋ยวนี้'",zh:"点击"立即付款"",fr:"Appuyez sur 'Payer maintenant'",es:"Toque 'Pagar ahora'"}),
+              desc:({en:"Press the large green 'Pay Now' button on the checkout screen.",th:"กดปุ่มสีเขียวขนาดใหญ่ 'ชำระเงินเดี๋ยวนี้' บนหน้าจอ",zh:"按下结账屏幕上的大绿色"立即付款"按钮。",fr:"Appuyez sur le grand bouton vert sur l'écran de caisse.",es:"Presione el botón verde grande en la pantalla de caja."}),
+              visual:"✅"},
+        {n:3,title:({en:"Choose payment method",th:"เลือกวิธีชำระเงิน",zh:"选择付款方式",fr:"Choisissez la méthode de paiement",es:"Elija método de pago"}),
+              desc:({en:"Select card, QR code, or cash.",th:"เลือกบัตร QR โค้ด หรือเงินสด",zh:"选择卡、二维码或现金。",fr:"Sélectionnez carte, QR code ou espèces.",es:"Seleccione tarjeta, QR o efectivo."}),
+              visual:"💳"},
+        {n:4,title:({en:"Complete payment",th:"ดำเนินการชำระเงิน",zh:"完成付款",fr:"Effectuez le paiement",es:"Complete el pago"}),
+              desc:({en:"Card: tap or insert on reader. QR: scan code shown on screen with your bank app.",th:"บัตร: แตะหรือเสียบที่เครื่องอ่าน QR: สแกนโค้ดบนหน้าจอด้วยแอปธนาคาร",zh:"卡：在读卡器上轻触或插入。二维码：用银行应用扫描屏幕上的码。",fr:"Carte: tapez ou insérez. QR: scannez avec votre application bancaire.",es:"Tarjeta: toque o inserte. QR: escanee con su app bancaria."}),
+              visual:"📱"},
+        {n:5,title:({en:"Wait for confirmation",th:"รอการยืนยัน",zh:"等待确认",fr:"Attendez la confirmation",es:"Espere confirmación"}),
+              desc:({en:"Screen shows 'Payment complete ✓'. Take your items and receipt.",th:"หน้าจอแสดง 'ชำระเงินเสร็จสมบูรณ์ ✓' รับสินค้าและใบเสร็จ",zh:"屏幕显示"付款完成 ✓"，取走您的商品和收据。",fr:"L'écran affiche 'Paiement terminé ✓'. Prenez vos articles.",es:"La pantalla muestra 'Pago completado ✓'. Tome sus artículos."}),
+              visual:"🎉"},
+      ],
+      tip:({en:"If payment fails, try again or use the 'Help Now' button below.",th:"ถ้าชำระเงินไม่สำเร็จ ลองอีกครั้งหรือใช้ปุ่ม 'ขอความช่วยเหลือ'",zh:"如果付款失败，请重试或使用下方的"立即求助"按钮。",fr:"Si le paiement échoue, réessayez ou utilisez le bouton 'Aide urgente'.",es:"Si el pago falla, inténtelo de nuevo o use el botón 'Ayuda urgente'."})
+    },
+    product:{
+      icon:"⚠️", iconBg:"rgba(255,140,0,.14)", iconColor:"#ffaa44",
+      titleKey:"g_prod_title", subKey:"g_prod_sub", badgeKey:"g_prod_badge", badgeCls:"badge-orange",
+      isSub:true,
+      subs:[
+        {key:"barcode",icon:"📵",ibg:"rgba(204,0,0,.14)",ic:"#ff7777",
+         title:({en:"Barcode not working",th:"บาร์โค้ดใช้งานไม่ได้",zh:"条形码无法使用",fr:"Code-barres non reconnu",es:"Código de barras no funciona"}),
+         desc:({en:"Scanner won't read the item",th:"สแกนเนอร์ไม่สามารถอ่านสินค้าได้",zh:"扫描仪无法读取商品",fr:"Le scanner ne lit pas l'article",es:"El escáner no lee el artículo"})},
+        {key:"price",icon:"🏷️",ibg:"rgba(255,238,0,.12)",ic:"#FFE500",
+         title:({en:"Wrong price shown",th:"ราคาที่แสดงไม่ถูกต้อง",zh:"显示价格有误",fr:"Prix affiché incorrect",es:"Precio incorrecto mostrado"}),
+         desc:({en:"Price on screen doesn't match shelf",th:"ราคาบนหน้าจอไม่ตรงกับชั้นวาง",zh:"屏幕上的价格与货架不符",fr:"Le prix à l'écran ne correspond pas à l'étagère",es:"El precio en pantalla no coincide con la etiqueta"})},
+        {key:"notfound",icon:"🔎",ibg:"rgba(255,255,255,.07)",ic:"#c0a060",
+         title:({en:"Item not found in system",th:"ไม่พบสินค้าในระบบ",zh:"系统中找不到商品",fr:"Article introuvable dans le système",es:"Artículo no encontrado en sistema"}),
+         desc:({en:"Product scans but isn't in the database",th:"สินค้าสแกนได้แต่ไม่มีในฐานข้อมูล",zh:"商品能扫描但不在数据库中",fr:"Le produit scanne mais n'est pas dans la base",es:"El producto escanea pero no está en la base de datos"})},
+      ]
+    },
+    barcode:{
+      icon:"📵", iconBg:"rgba(204,0,0,.14)", iconColor:"#ff7777",
+      titleKey:"g_bar_title", subKey:"g_bar_sub", badgeKey:"g_bar_badge", badgeCls:"badge-red",
+      steps:[
+        {n:1,title:({en:"Clean the barcode",th:"ทำความสะอาดบาร์โค้ด",zh:"清洁条形码",fr:"Nettoyez le code-barres",es:"Limpie el código de barras"}),
+              desc:({en:"If dirty or crumpled, gently smooth it out and try again.",th:"ถ้าสกปรกหรือยับ ค่อยๆ คลี่ออกแล้วลองใหม่",zh:"如果脏了或折皱，轻轻展平后重试。",fr:"Si sale ou froissé, lissez-le doucement et réessayez.",es:"Si está sucio o arrugado, alíselo suavemente e intente de nuevo."}),
+              visual:"🧹"},
+        {n:2,title:({en:"Try different angles",th:"ลองมุมที่แตกต่าง",zh:"尝试不同角度",fr:"Essayez différents angles",es:"Pruebe diferentes ángulos"}),
+              desc:({en:"Rotate the barcode slowly under the scanner light. A slight angle often helps.",th:"หมุนบาร์โค้ดช้าๆ ใต้แสงสแกนเนอร์ บางครั้งมุมเล็กน้อยช่วยได้",zh:"在扫描灯下缓慢旋转条形码，稍微倾斜往往有帮助。",fr:"Faites pivoter le code-barres lentement sous la lumière du scanner.",es:"Gire el código de barras lentamente bajo la luz del escáner."}),
+              visual:"🔄"},
+        {n:3,title:({en:"Still not working?",th:"ยังไม่ได้ผล?",zh:"仍然无法使用？",fr:"Toujours pas de résultat ?",es:"¿Sigue sin funcionar?"}),
+              desc:({en:"Contact us and we'll help you add the item manually.",th:"ติดต่อเราและเราจะช่วยเพิ่มสินค้าด้วยตนเอง",zh:"联系我们，我们将帮您手动添加该商品。",fr:"Contactez-nous et nous ajouterons l'article manuellement.",es:"Contáctenos y le ayudaremos a agregar el artículo manualmente."}),
+              visual:"📞"},
+      ],
+      warn:({en:"Do NOT put the item in your bag without scanning. Always contact us for help.",th:"อย่าวางสินค้าในถุงโดยไม่สแกน ติดต่อเราเสมอ",zh:"请勿在未扫描的情况下将商品放入袋中，请联系我们。",fr:"Ne mettez PAS l'article dans votre sac sans scanner. Contactez-nous.",es:"NO ponga el artículo en su bolsa sin escanear. Siempre contáctenos."})
+    },
+    price:{
+      icon:"🏷️", iconBg:"rgba(255,238,0,.12)", iconColor:"#FFE500",
+      titleKey:"g_price_title", subKey:"g_price_sub", badgeKey:"g_price_badge", badgeCls:"badge-yellow",
+      steps:[
+        {n:1,title:({en:"Note the item and price",th:"จดชื่อสินค้าและราคา",zh:"记下商品名称和价格",fr:"Notez l'article et le prix",es:"Anote el artículo y el precio"}),
+              desc:({en:"Remember the product name, the shelf price, and price shown on screen.",th:"จำชื่อสินค้า ราคาบนชั้นวาง และราคาบนหน้าจอ",zh:"记住产品名称、货架价格和屏幕上显示的价格。",fr:"Notez le nom du produit, le prix en rayon et le prix affiché.",es:"Recuerde el nombre del producto, precio en estante y precio en pantalla."}),
+              visual:"📝"},
+        {n:2,title:({en:"Contact us now",th:"ติดต่อเราตอนนี้",zh:"立即联系我们",fr:"Contactez-nous maintenant",es:"Contáctenos ahora"}),
+              desc:({en:"We can correct the price from our end. Don't pay the wrong amount.",th:"เราสามารถแก้ไขราคาจากฝั่งเราได้ อย่าจ่ายราคาที่ผิด",zh:"我们可以从后台更正价格，不要支付错误金额。",fr:"Nous pouvons corriger le prix de notre côté. Ne payez pas le mauvais montant.",es:"Podemos corregir el precio desde nuestro lado. No pague el monto incorrecto."}),
+              visual:"📞"},
+      ],
+      tip:({en:"By law, you should be charged the shelf price. We'll make sure you pay the correct amount.",th:"ตามกฎหมาย คุณควรถูกเรียกเก็บราคาบนชั้น เราจะตรวจสอบให้คุณจ่ายถูกต้อง",zh:"依法您应按货架价格收费，我们将确保您支付正确金额。",fr:"Vous devez être facturé au prix en rayon. Nous veillerons à ce que vous payiez le bon montant.",es:"Por ley, debe cobrársele el precio del estante. Nos aseguraremos de que pague el monto correcto."})
+    },
+    notfound:{
+      icon:"🔎", iconBg:"rgba(255,255,255,.07)", iconColor:"#c0a060",
+      titleKey:"g_nf_title", subKey:"g_nf_sub", badgeKey:"g_nf_badge", badgeCls:"badge-orange",
+      steps:[
+        {n:1,title:({en:"Don't scan it again",th:"อย่าสแกนซ้ำ",zh:"不要再次扫描",fr:"Ne le scannez pas à nouveau",es:"No lo escanee de nuevo"}),
+              desc:({en:"If the system shows an error, scanning again won't help. Keep the item aside.",th:"ถ้าระบบแสดงข้อผิดพลาด การสแกนซ้ำไม่ช่วย เก็บสินค้าไว้ก่อน",zh:"如果系统已显示错误，再次扫描也无济于事，将商品放在一边。",fr:"Si le système affiche une erreur, scanner à nouveau n'aidera pas.",es:"Si el sistema muestra un error, volver a escanear no ayudará."}),
+              visual:"🛑"},
+        {n:2,title:({en:"Note the item name",th:"จดชื่อสินค้า",zh:"记下商品名称",fr:"Notez le nom de l'article",es:"Anote el nombre del artículo"}),
+              desc:({en:"Note the product name and shelf price so we can add it manually.",th:"จดชื่อสินค้าและราคาบนชั้นวาง เพื่อให้เราเพิ่มด้วยตนเองได้",zh:"记下产品名称和货架价格，以便我们手动添加。",fr:"Notez le nom du produit et le prix en rayon pour qu'on l'ajoute manuellement.",es:"Anote el nombre del producto y precio del estante para agregarlo manualmente."}),
+              visual:"📝"},
+        {n:3,title:({en:"Contact us",th:"ติดต่อเรา",zh:"联系我们",fr:"Contactez-nous",es:"Contáctenos"}),
+              desc:({en:"We'll add the item to your order remotely within a few minutes.",th:"เราจะเพิ่มสินค้าลงในคำสั่งซื้อของคุณจากระยะไกลภายในไม่กี่นาที",zh:"我们将在几分钟内远程将商品添加到您的订单中。",fr:"Nous ajouterons l'article à votre commande à distance en quelques minutes.",es:"Añadiremos el artículo a su pedido de forma remota en unos minutos."}),
+              visual:"📞"},
+      ]
+    }
+  };
+}
+
+/* helper to get localised string from a step field */
+function loc(field){ return typeof field === 'object' ? (field[lang] || field.en) : field; }
+
+/* ── RENDER GUIDE ── */
+let currentGuideKey = null;
+
+function renderGuide(key){
+  const guides = getGuides();
+  const g = guides[key];
+  if(!g) return;
+  currentGuideKey = key;
+  document.getElementById('guide-breadcrumb').textContent = t(g.titleKey);
+
+  let html = `<div class="guide-header">
+    <div class="guide-icon" style="background:${g.iconBg};color:${g.iconColor}">${g.icon}</div>
+    <div><div class="guide-title">${t(g.titleKey)}<span>${t(g.subKey)}</span></div></div>
+    <span class="badge ${g.badgeCls}" style="margin-left:auto">${t(g.badgeKey)}</span>
+  </div>`;
+
+  if(g.isSub){
+    g.subs.forEach(s => {
+      html += `<div class="sub-card" onclick="showGuide('${s.key}')">
+        <div class="sub-icon" style="background:${s.ibg};color:${s.ic}">${s.icon}</div>
+        <div class="sub-text"><div class="sub-title">${loc(s.title)}</div><div class="sub-desc">${loc(s.desc)}</div></div>
+        <div class="sub-arrow">›</div>
+      </div>`;
+    });
+  } else {
+    g.steps.forEach((s,i) => {
+      html += `<div class="step-card" style="animation-delay:${i*0.08}s">
+        <div class="step-number">${s.n}</div>
+        <div class="step-content"><div class="step-title">${loc(s.title)}</div><div class="step-desc">${loc(s.desc)}</div></div>
+        <div class="step-visual">${s.visual}</div>
+      </div>`;
+    });
+    if(g.tip){
+      html += `<div class="tip-box"><div style="font-size:18px;margin-top:2px">💡</div><p>${loc(g.tip)}</p></div>`;
+    }
+    if(g.warn){
+      html += `<div class="warn-box"><div style="font-size:18px;margin-top:2px">⚠️</div><p>${loc(g.warn)}</p></div>`;
+    }
+    // wa button in sub-guides
+    if(['barcode','price','notfound'].includes(key)){
+      const msgs = {
+        barcode:{en:"Barcode issue: an item's barcode is not scanning.",th:"ปัญหาบาร์โค้ด: บาร์โค้ดของสินค้าสแกนไม่ได้",zh:"条形码问题：商品条形码无法扫描。",fr:"Problème de code-barres : le code-barres d'un article ne scanne pas.",es:"Problema de código de barras: el código no escanea."},
+        price:{en:"Price issue: the checkout price doesn't match the shelf price.",th:"ปัญหาราคา: ราคาที่คิดไม่ตรงกับชั้นวาง",zh:"价格问题：结账价格与货架价格不符。",fr:"Problème de prix : le prix de caisse ne correspond pas au rayon.",es:"Problema de precio: el precio no coincide con la etiqueta."},
+        notfound:{en:"Item not found: a product is not in the system.",th:"ไม่พบสินค้า: สินค้าไม่มีในระบบ",zh:"找不到商品：商品不在系统中。",fr:"Article introuvable : un produit n'est pas dans le système.",es:"Artículo no encontrado: un producto no está en el sistema."}
+      };
+      const msg = encodeURIComponent(loc(msgs[key]));
+      html += `<button class="btn-action btn-wa" style="border:none" onclick="openWhatsApp('${loc(msgs[key]).replace(/'/g,"\\'")}')">
+        <div class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.004 2C6.477 2 2 6.477 2 12.004a9.963 9.963 0 001.367 5.086L2 22l5.052-1.345A9.96 9.96 0 0012.004 22C17.527 22 22 17.527 22 12.004 22 6.477 17.527 2 12.004 2zm0 18.15a8.282 8.282 0 01-4.224-1.154l-.303-.18-3.134.834.843-3.064-.196-.315A8.316 8.316 0 013.85 12.003c0-4.497 3.658-8.154 8.154-8.154 4.497 0 8.154 3.657 8.154 8.154 0 4.497-3.657 8.147-8.154 8.147z"/></svg></div>
+        <div class="btn-text">${t('wa_btn')}<span>${t('wa_btn_sub')}</span></div>
+        <div class="btn-arr">›</div>
+      </button>`;
+    }
+  }
+  html += '<div style="height:8px"></div>';
+  document.getElementById('guide-body').innerHTML = html;
+}
+
+function showGuide(key){
+  renderGuide(key);
+  showScreen('screen-guide');
+}
+
+/* ── SCREEN NAV ── */
+let currentScreen = 'screen-idle';
+
+function showScreen(id){
+  resetIdleTimer();
+  const cur = document.querySelector('.screen.active');
+  const next = document.getElementById(id);
+  if(!next || cur===next) return;
+  if(cur){ cur.classList.add('exit'); setTimeout(()=>cur.classList.remove('active','exit'),350); }
+  next.classList.add('active');
+  currentScreen = id;
+  const sb = next.querySelector('.scroll-body');
+  if(sb) sb.scrollTop = 0;
+  buildTopbarLang();
+  applyTranslations();
+}
+
+function goIdle(){
+  clearIdleTimer();
+  showScreen('screen-idle');
+}
+
+/* ── CONTACT ── */
+function setupContact(){
+  const msg = encodeURIComponent(CONFIG.whatsappMessage);
+  const waUrl = `https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`;
+  document.getElementById('wa-btn').href = waUrl;
+  document.getElementById('call-btn').href = CONFIG.phoneNumber;
+}
+
+function openWhatsApp(customMsg){
+  const m = encodeURIComponent(customMsg || CONFIG.whatsappMessage);
+  window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${m}`,'_blank');
+}
+
+function openPDF(){ window.open(CONFIG.pdfUrl,'_blank'); }
+function trackAction(t){ console.log('[DEK NOI HelpStation]',t, new Date().toISOString()); }
+
+/* ── QR PLACEHOLDER ── */
+function drawQR(){
+  const c = document.getElementById('qr-canvas');
+  if(!c) return;
+  const ctx = c.getContext('2d'), sz=120, cell=5;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,sz,sz);
+  ctx.fillStyle='#111';
+  const seed=[1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,0,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1,0,0,1,0,1,1,1,0,1,0,0,1,1,1,1,0,1,1,1,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,0,1,0,0,1,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1];
+  let i=0;
+  for(let r=0;r<23;r++) for(let cl=0;cl<23;cl++){ if(seed[i%seed.length]) ctx.fillRect(cl*cell+2,r*cell+2,cell-1,cell-1); i++; }
+  const df=(x,y)=>{ ctx.fillStyle='#111';ctx.fillRect(x,y,21,21);ctx.fillStyle='#fff';ctx.fillRect(x+3,y+3,15,15);ctx.fillStyle='#111';ctx.fillRect(x+6,y+6,9,9); };
+  df(2,2); df(2,sz-23); df(sz-23,2);
+}
+
+/* ── INACTIVITY ── */
+let idleTimer=null, cdTimer=null, cdVal=CONFIG.warningCountdown;
+
+function resetIdleTimer(){
+  if(currentScreen==='screen-idle') return;
+  clearIdleTimer();
+  idleTimer=setTimeout(showIdleWarning, CONFIG.idleTimeout*1000);
+}
+function clearIdleTimer(){ clearTimeout(idleTimer); clearTimeout(cdTimer); hideIdleWarning(); }
+function showIdleWarning(){
+  cdVal=CONFIG.warningCountdown;
+  document.getElementById('c-num').textContent=cdVal;
+  updateRing();
+  document.getElementById('ia-overlay').classList.add('visible');
+  runCd();
+}
+function hideIdleWarning(){ document.getElementById('ia-overlay').classList.remove('visible'); clearTimeout(cdTimer); }
+function runCd(){
+  clearTimeout(cdTimer);
+  if(cdVal<=0){ hideIdleWarning(); goIdle(); return; }
+  cdTimer=setTimeout(()=>{ cdVal--; document.getElementById('c-num').textContent=cdVal; updateRing(); runCd(); },1000);
+}
+function updateRing(){
+  const el=document.getElementById('c-circle');
+  el.style.strokeDashoffset=282.7*(1-cdVal/CONFIG.warningCountdown);
+}
+
+document.getElementById('btn-stay').addEventListener('click',()=>{ clearIdleTimer(); resetIdleTimer(); });
+
+/* ── IDLE CLICK ── */
+document.getElementById('screen-idle').addEventListener('click', e=>{
+  if(e.target.closest('.lang-btn')) return;
+  showScreen('screen-home');
+  resetIdleTimer();
+});
+
+/* ── GLOBAL ACTIVITY ── */
+['touchstart','mousedown','keydown','scroll'].forEach(ev=>{
+  document.addEventListener(ev,()=>{ if(currentScreen!=='screen-idle') resetIdleTimer(); },{passive:true});
+});
+
+/* ── RIPPLE ── */
+function ripple(e){
+  const el=e.currentTarget; if(!el) return;
+  const r=el.getBoundingClientRect();
+  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  const d=document.createElement('div'); d.className='ripple-el';
+  d.style.left=(x-28)+'px'; d.style.top=(y-28)+'px';
+  el.appendChild(d); setTimeout(()=>d.remove(),700);
+}
+document.querySelectorAll('.menu-card,.sub-card,.btn-action,.btn-bot,.btn-topbar,.lang-btn,.tl-btn').forEach(el=>{
+  el.addEventListener('touchstart',ripple,{passive:true});
+  el.addEventListener('mousedown',ripple);
+});
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&currentScreen!=='screen-idle') showScreen('screen-home'); });
+
+/* ── INIT ── */
+function init(){
+  setupContact();
+  drawQR();
+  buildTopbarLang();
+  applyTranslations();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
