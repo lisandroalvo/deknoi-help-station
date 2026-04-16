@@ -49,13 +49,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
 .idle-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0}
 
 /* character */
-.character-wrapper{width:260px;height:300px;position:relative;animation:charFloat 4s ease-in-out infinite}
+.character-wrapper{width:300px;height:340px;position:relative}
 @keyframes charFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-16px) scale(1.025)}}
 .char-pulse{position:absolute;inset:-28px;border-radius:50%;border:2.5px solid rgba(255,238,0,.3);animation:pRing 3s ease-in-out infinite}
 .char-pulse:nth-child(2){animation-delay:1s;border-color:rgba(204,0,0,.25)}
 .char-pulse:nth-child(3){animation-delay:2s;border-color:rgba(255,238,0,.15)}
 @keyframes pRing{0%{transform:scale(.82);opacity:.9}100%{transform:scale(1.45);opacity:0}}
 #char-img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(204,0,0,.5))}
+#char-video{width:100%;height:100%;object-fit:contain;border-radius:16px;filter:drop-shadow(0 16px 32px rgba(204,0,0,.5))}
 #char-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:100px}
 
 /* idle logo */
@@ -257,12 +258,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
       <div class="char-pulse"></div>
       <div class="char-pulse"></div>
       <!--
-        CHARACTER MEDIA
-        Option A (now):  <img src="...">
-        Option B (later): replace with <video autoplay loop muted playsinline id="char-img"></video>
+        CHARACTER MEDIA — video is active.
+        To swap back to image: remove the <video> tag and uncomment the <img> below.
       -->
+      <video
+        id="char-video"
+        src="Video/Child Voice Animation Green Shirt.mp4"
+        autoplay loop muted playsinline
+      ></video>
+      <!-- fallback if video fails to load -->
       <img id="char-img" src="media/Logos from Google Drive.png" alt="DEK NOI character"
-           onerror="this.style.display='none';document.getElementById('char-fallback').style.display='flex'"/>
+           style="display:none"/>
       <div id="char-fallback">🛒</div>
     </div>
 
