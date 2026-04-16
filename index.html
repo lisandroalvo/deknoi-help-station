@@ -27,11 +27,8 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
-.screen{background:var(--bg)}
-#screen-home,#screen-guide,#screen-support,#screen-pdf{background:var(--bg)}
-
 /* SCREENS */
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.4,0,.2,1);transform:translateY(16px);will-change:opacity,transform}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.4,0,.2,1);transform:translateY(16px);will-change:opacity,transform;background:var(--bg)}
 .screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
 .screen.exit{opacity:0;transform:translateY(-16px)}
 
@@ -263,16 +260,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
       -->
       <video
         id="char-video"
-        src="Video/Child Voice Animation Green Shirt.mp4"
+        src="Video/Child%20Voice%20Animation%20Green%20Shirt.mp4"
         autoplay loop muted playsinline
+        onerror="this.style.display='none';document.getElementById('char-img').style.display='block'"
       ></video>
       <!-- fallback if video fails to load -->
-      <img id="char-img" src="media/Logos from Google Drive.png" alt="DEK NOI character"
+      <img id="char-img" src="media/Logos%20from%20Google%20Drive.png" alt="DEK NOI character"
            style="display:none"/>
       <div id="char-fallback">🛒</div>
     </div>
 
-    <img class="idle-logo" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+    <img class="idle-logo" src="media/Stickers%20Font%20and%20Logo.png" alt="DEK NOI"
          onerror="this.style.display='none'"/>
 
     <div class="idle-headline" id="idle-headline">Need help?</div>
@@ -288,7 +286,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
 <div class="screen" id="screen-home">
   <div class="topbar">
     <div class="topbar-brand">
-      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+      <img class="topbar-logo-img" src="media/Stickers%20Font%20and%20Logo.png" alt="DEK NOI"
            onerror="this.style.display='none';document.getElementById('tb-fallback').style.display='flex'"/>
       <div class="topbar-logo-fallback" id="tb-fallback" style="display:none">🛒</div>
     </div>
@@ -361,7 +359,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
 <div class="screen" id="screen-guide">
   <div class="topbar">
     <div class="topbar-brand">
-      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+      <img class="topbar-logo-img" src="media/Stickers%20Font%20and%20Logo.png" alt="DEK NOI"
            onerror="this.style.display='none'"/>
       <div class="topbar-label">
         <span id="guide-breadcrumb">Guide</span>
@@ -384,7 +382,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
 <div class="screen" id="screen-support">
   <div class="topbar">
     <div class="topbar-brand">
-      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+      <img class="topbar-logo-img" src="media/Stickers%20Font%20and%20Logo.png" alt="DEK NOI"
            onerror="this.style.display='none'"/>
       <div class="topbar-label">
         <span data-i18n="support_label">Get Help</span>
@@ -451,7 +449,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);backgro
 <div class="screen" id="screen-pdf">
   <div class="topbar">
     <div class="topbar-brand">
-      <img class="topbar-logo-img" src="media/Stickers Font and Logo.png" alt="DEK NOI"
+      <img class="topbar-logo-img" src="media/Stickers%20Font%20and%20Logo.png" alt="DEK NOI"
            onerror="this.style.display='none'"/>
       <div class="topbar-label">
         <span data-i18n="pdf_label">Full Guide</span>
